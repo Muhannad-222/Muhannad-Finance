@@ -514,6 +514,14 @@
                     </select>
                 </div>
                 <div class="form-row">
+                    <label>Account Currency</label>
+                    <select id="acc-currency">
+                        <option value="AED">AED (Dirham)</option>
+                        <option value="INR">INR (Rupee)</option>
+                        <option value="USD">USD (Dollar)</option>
+                    </select>
+                </div>
+                <div class="form-row">
                     <label>Initial Balance</label>
                     <input type="number" id="acc-balance" step="0.01" placeholder="0.00" required>
                 </div>
@@ -928,9 +936,9 @@ const Helpers = {
 
     getCurrency() { return Store.data.settings?.currency || 'AED'; },
 
-    fmtMoney(n) { 
+    fmtMoney(n, overrideCurr = null) { 
         if(isNaN(n)) n = 0;
-        const curr = this.getCurrency();
+        const curr = overrideCurr || this.getCurrency();
         const config = this.configs[curr] || this.configs['AED'];
         return new Intl.NumberFormat(config.locale, { style: 'currency', currency: config.code }).format(n); 
     },
@@ -1047,7 +1055,7 @@ const UI = {
             return `
                 <div class="account-item flex-between" onclick="Router.go('accounts')">
                     <span class="text-sm">${acc.name}</span>
-                    <span class="text-mono text-sm" style="color:var(--text-main)">${Helpers.fmtMoney(bal)}</span>
+                    <span class="text-mono text-sm" style="color:var(--text-main)">${Helpers.fmtMoney(bal, acc.currency)}</span>
                 </div>
             `;
         }).join('') : '<div class="text-muted text-sm">No accounts yet.</div>';
@@ -1436,24 +1444,6 @@ const UI = {
         }
     },
 
-    drawCurve(ctx, startX, startY, targetEl, containerRect, color) {
-        const targetRect = targetEl.getBoundingClientRect();
-        const endX = targetRect.left - containerRect.left;
-        const endY = (targetRect.top + targetRect.height/2) - containerRect.top;
-
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.bezierCurveTo(startX + 50, startY, endX - 50, endY, endX, endY);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.arc(endX, endY, 3, 0, 2 * Math.PI);
-        ctx.fillStyle = color;
-        ctx.fill();
-    },
-
     renderInvestments(root) {
         const invs = Store.data.investments || [];
         const totalValue = invs.reduce((sum, i) => sum + (i.qty * i.currentPrice), 0);
@@ -1732,7 +1722,7 @@ const UI = {
                                 <button onclick="Store.deleteAccount(${acc.id}); Router.reload()" style="background:none;border:none;color:var(--danger);cursor:pointer;">🗑</button>
                             </div>
                             <div class="mt-4" style="font-weight:600; font-size:16px;">${acc.name}</div>
-                            <div class="text-xl mt-4 font-mono">${Helpers.fmtMoney(balance)}</div>
+                            <div class="text-xl mt-4 font-mono">${Helpers.fmtMoney(balance, acc.currency)}</div>
                         </div>
                     `;
                 }).join('')}
@@ -2189,6 +2179,7 @@ document.getElementById('acc-form').addEventListener('submit', (e) => {
         id: Date.now(),
         name: document.getElementById('acc-name').value,
         type: document.getElementById('acc-type').value,
+        currency: document.getElementById('acc-currency').value,
         initialBalance: parseFloat(document.getElementById('acc-balance').value)
     };
     Store.addAccount(acc);
