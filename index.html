@@ -77,9 +77,10 @@
             padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;
             transition: all 0.2s var(--ease); display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn:hover { border-color: var(--text-muted); background: var(--border); }
+        .btn:hover:not(:disabled) { border-color: var(--text-muted); background: var(--border); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-primary { background: var(--accent); border-color: var(--accent); color: white; box-shadow: 0 0 15px var(--accent-glow); }
-        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:hover:not(:disabled) { opacity: 0.9; }
         .btn-sm { padding: 4px 8px; font-size: 11px; }
 
         .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; padding: 0 8px; }
@@ -292,7 +293,7 @@
                 <div style="flex: 1; height: 1px; background: var(--border);"></div>
             </div>
 
-            <button class="btn" onclick="signInWithGoogle()" style="width: 100%; justify-content: center; font-size:14px; padding:10px;">
+            <button class="btn" id="google-auth-btn" onclick="signInWithGoogle()" style="width: 100%; justify-content: center; font-size:14px; padding:10px;">
                 Sign in with Google
             </button>
 
@@ -302,7 +303,7 @@
             </div>
             
             <div id="auth-loading" class="text-muted mt-4" style="display:none; margin-top:16px;">Processing...</div>
-            <div id="auth-error" class="mt-4" style="display:none; margin-top:16px; color: var(--danger); font-size: 12px;"></div>
+            <div id="auth-error" class="mt-4" style="display:none; margin-top:16px; color: var(--danger); font-size: 12px; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 4px;"></div>
         </div>
     </div>
 
@@ -695,24 +696,37 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
+// Handle the redirect result when the user comes back from the Google login page
+auth.getRedirectResult().then((result) => {
+    if (result && result.user) {
+        // Successful login, the onAuthStateChanged will handle the dashboard load
+        document.getElementById('auth-loading').innerText = "Logging in securely...";
+        document.getElementById('auth-loading').style.display = 'block';
+    }
+}).catch((error) => {
+    // If the redirect fails or is cancelled
+    document.getElementById('auth-loading').style.display = 'none';
+    const googleBtn = document.getElementById('google-auth-btn');
+    if (googleBtn) googleBtn.disabled = false;
+    
+    // Make error user-friendly
+    document.getElementById('auth-error').innerText = "Login cancelled or failed. Please try again.";
+    document.getElementById('auth-error').style.display = 'block';
+});
+
 function signInWithGoogle() {
     const loading = document.getElementById('auth-loading');
     const errorDiv = document.getElementById('auth-error');
+    const googleBtn = document.getElementById('google-auth-btn');
     
+    // Show loading and disable the button to prevent multiple clicks
     loading.style.display = 'block';
     errorDiv.style.display = 'none';
-
-    // Disable the button to prevent double-clicks
-    const googleBtn = document.querySelector('button[onclick="signInWithGoogle()"]');
     if(googleBtn) googleBtn.disabled = true;
 
-    // Use Redirect instead of Popup for better mobile and ad-blocker compatibility
-    // Check for errors after returning from the Google redirect
-auth.getRedirectResult().catch(error => {
-    document.getElementById('auth-loading').style.display = 'none';
-    document.getElementById('auth-error').innerText = error.message;
-    document.getElementById('auth-error').style.display = 'block';
-});
+    // Use Redirect to bypass mobile browser popup blockers completely
+    auth.signInWithRedirect(googleProvider);
+}
 
 function logOut() {
     auth.signOut().then(() => {
@@ -755,16 +769,19 @@ function handleEmailAuth(e) {
     const password = document.getElementById('auth-password').value;
     const loading = document.getElementById('auth-loading');
     const errorDiv = document.getElementById('auth-error');
+    const submitBtn = document.getElementById('auth-submit-btn');
 
     loading.style.display = 'block';
     errorDiv.style.display = 'none';
+    submitBtn.disabled = true;
 
     if(isLoginMode) {
         // Login Flow
         auth.signInWithEmailAndPassword(email, password)
             .catch(error => {
                 loading.style.display = 'none';
-                errorDiv.innerText = error.message;
+                submitBtn.disabled = false;
+                errorDiv.innerText = "Invalid email or password. Please try again.";
                 errorDiv.style.display = 'block';
             });
     } else {
@@ -772,7 +789,12 @@ function handleEmailAuth(e) {
         auth.createUserWithEmailAndPassword(email, password)
             .catch(error => {
                 loading.style.display = 'none';
-                errorDiv.innerText = error.message;
+                submitBtn.disabled = false;
+                // Friendly error message
+                let msg = error.message;
+                if(error.code === 'auth/weak-password') msg = "Password must be at least 6 characters.";
+                if(error.code === 'auth/email-already-in-use') msg = "An account with this email already exists.";
+                errorDiv.innerText = msg;
                 errorDiv.style.display = 'block';
             });
     }
