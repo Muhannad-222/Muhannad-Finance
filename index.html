@@ -782,13 +782,13 @@ const Store = {
             if (!this.data.goals) this.data.goals = [];
             if (!this.data.debts) this.data.debts = [];
             if (!this.data.investments) this.data.investments = [];
-            if (!this.data.settings) this.data.settings = { currency: 'AED', theme: 'blue' };
+            if (!this.data.settings) this.data.settings = { currency: 'INR', theme: 'blue' };
         } else {
             this.seed();
         }
         
         this.applyTheme(this.data.settings.theme);
-        document.getElementById('currency-selector').value = this.data.settings?.currency || 'AED';
+        document.getElementById('currency-selector').value = this.data.settings?.currency || 'INR';
         
         Chart.defaults.color = '#a1a1aa';
         Chart.defaults.borderColor = '#3f3f46';
@@ -1027,7 +1027,7 @@ const Store = {
 
     seed() {
         this.data = {
-            settings: { currency: 'AED', theme: 'blue' },
+            settings: { currency: 'INR', theme: 'blue' },
             accounts: [
                 { id: 1, name: 'Main Account', type: 'Checking', initialBalance: 5000 },
                 { id: 2, name: 'Wallet', type: 'Cash', initialBalance: 200 }
@@ -1084,7 +1084,7 @@ const Store = {
                 const parsed = JSON.parse(e.target.result);
                 if(parsed.accounts && parsed.transactions) {
                     this.data = parsed;
-                    if (!this.data.settings) this.data.settings = { currency: 'AED', theme: 'blue' };
+                    if (!this.data.settings) this.data.settings = { currency: 'INR', theme: 'blue' };
                     if (!this.data.debts) this.data.debts = [];
                     if (!this.data.investments) this.data.investments = [];
                     
@@ -1110,7 +1110,7 @@ const Helpers = {
         'AED': { locale: 'en-AE', code: 'AED' }
     },
 
-    getCurrency() { return Store.data.settings?.currency || 'AED'; },
+    getCurrency() { return Store.data.settings?.currency || 'INR'; },
 
     fmtMoney(n, overrideCurr = null) { 
         if(isNaN(n)) n = 0;
