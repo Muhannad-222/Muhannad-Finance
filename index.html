@@ -630,7 +630,7 @@
 
 <script>
 /**
- * TITANIUM ENGINE v10.1 (MOBILE OPTIMIZED + LIVE GOLD API)
+ * TITANIUM ENGINE v10.1 (MOBILE OPTIMIZED + LIVE GOLD API - 24K ONLY)
  */
 
 const Store = {
@@ -1129,18 +1129,11 @@ const UI = {
                 
                 <div class="card" style="border:1px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
                     <div class="flex-between">
-                        <div class="text-muted text-sm" style="color:#f59e0b">Live Gold Rate (per gram)</div>
+                        <div class="text-muted text-sm" style="color:#f59e0b">Live Gold Rate</div>
+                        <div style="font-size:10px; color:#f59e0b">24K (99.9%)</div>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:12px;">
-                        <div>
-                            <div style="font-size:11px; color:#f59e0b; font-weight:600;">24K (99.9%)</div>
-                            <div class="text-xl mt-1" id="gold-24k-display" style="color:#f59e0b; font-size:20px;">Loading...</div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div style="font-size:11px; color:#f59e0b; font-weight:600;">18K (75.0%)</div>
-                            <div class="text-xl mt-1" id="gold-18k-display" style="color:#f59e0b; font-size:20px;">Loading...</div>
-                        </div>
-                    </div>
+                    <div class="text-xl mt-3" id="gold-24k-display" style="color:#f59e0b">Loading...</div>
+                    <div class="text-sm mt-1" style="color:#a1a1aa">per gram</div>
                 </div>
 
                 <div class="card">
@@ -1192,20 +1185,15 @@ const UI = {
 
     async refreshGoldRate() {
         const el24k = document.getElementById('gold-24k-display');
-        const el18k = document.getElementById('gold-18k-display');
-        if(!el24k || !el18k) return;
+        if(!el24k) return;
 
         const priceOz = await Helpers.fetchGoldPrice();
         
         if (priceOz) {
             const priceGram24k = priceOz / 31.1035; 
-            const priceGram18k = priceGram24k * 0.75; // 18K is 75% of 24K
-            
             el24k.innerText = Helpers.fmtMoney(priceGram24k);
-            el18k.innerText = Helpers.fmtMoney(priceGram18k);
         } else {
             el24k.innerText = "Unavailable";
-            el18k.innerText = "Unavailable";
         }
     },
 
