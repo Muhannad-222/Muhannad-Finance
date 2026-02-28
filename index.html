@@ -679,7 +679,7 @@ const Store = {
         this.save();
         Router.reload();
         localStorage.removeItem('titan_rates');
-        localStorage.removeItem(`titan_gold_${code.toLowerCase()}`);
+        localStorage.removeItem(`titan_gold_${code.toUpperCase()}`);
     },
 
     setTheme(name) {
@@ -1020,32 +1020,39 @@ const Helpers = {
     },
 
     async fetchGoldPrice() {
-        const curr = this.getCurrency().toLowerCase();
+        const curr = this.getCurrency().toUpperCase();
         const cacheKey = `titan_gold_${curr}`;
         
+        // Shortened cache to 5 minutes (300,000 ms) for highly accurate live data
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
             const data = JSON.parse(cached);
-            if (Date.now() - data.timestamp < 14400000) { 
+            if (Date.now() - data.timestamp < 300000) { 
                 return data.price;
             }
         }
 
         try {
-            // Free Open API for Daily Currency & XAU Rates (No Key Required)
-            const response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/xau.json');
+            // Using Binance PAXG (Gold Pegged Token) for highly accurate, free, real-time live Gold Spot in USD
+            const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT');
             
             if(response.ok) {
                 const json = await response.json();
-                const priceOz = json.xau[curr]; 
+                let priceOz = parseFloat(json.price);
                 
-                if (priceOz) {
-                    localStorage.setItem(cacheKey, JSON.stringify({
-                        timestamp: Date.now(),
-                        price: priceOz
-                    }));
-                    return priceOz;
+                // Convert USD to the selected currency
+                if(curr !== 'USD') {
+                    const rates = await this.fetchRates('USD');
+                    if(rates && rates[curr]) {
+                        priceOz = priceOz * rates[curr];
+                    }
                 }
+                
+                localStorage.setItem(cacheKey, JSON.stringify({
+                    timestamp: Date.now(),
+                    price: priceOz
+                }));
+                return priceOz;
             }
             throw new Error("API Limit or Error");
         } catch (e) {
