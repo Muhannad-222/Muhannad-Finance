@@ -287,16 +287,6 @@
                 <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; font-size:16px; padding:12px;" id="auth-submit-btn">Login</button>
             </form>
 
-            <div style="margin: 20px 0; display: flex; align-items: center; justify-content: center;">
-                <div style="flex: 1; height: 1px; background: var(--border);"></div>
-                <span style="padding: 0 10px; color: var(--text-muted); font-size: 12px; font-weight:bold;">OR</span>
-                <div style="flex: 1; height: 1px; background: var(--border);"></div>
-            </div>
-
-            <button class="btn" id="google-auth-btn" onclick="signInWithGoogle()" style="width: 100%; justify-content: center; font-size:14px; padding:10px;">
-                Sign in with Google
-            </button>
-
             <div style="margin-top: 24px; font-size: 13px;">
                 <span class="text-muted" id="auth-toggle-text">Don't have an account?</span>
                 <a href="#" onclick="toggleAuthMode(event)" style="color: var(--accent); text-decoration: none; font-weight: 500;" id="auth-toggle-link">Register here</a>
@@ -694,39 +684,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
-
-// Handle the redirect result when the user comes back from the Google login page
-auth.getRedirectResult().then((result) => {
-    if (result && result.user) {
-        // Successful login, the onAuthStateChanged will handle the dashboard load
-        document.getElementById('auth-loading').innerText = "Logging in securely...";
-        document.getElementById('auth-loading').style.display = 'block';
-    }
-}).catch((error) => {
-    // If the redirect fails or is cancelled
-    document.getElementById('auth-loading').style.display = 'none';
-    const googleBtn = document.getElementById('google-auth-btn');
-    if (googleBtn) googleBtn.disabled = false;
-    
-    // Make error user-friendly
-    document.getElementById('auth-error').innerText = "Login cancelled or failed. Please try again.";
-    document.getElementById('auth-error').style.display = 'block';
-});
-
-function signInWithGoogle() {
-    const loading = document.getElementById('auth-loading');
-    const errorDiv = document.getElementById('auth-error');
-    const googleBtn = document.getElementById('google-auth-btn');
-    
-    // Show loading and disable the button to prevent multiple clicks
-    loading.style.display = 'block';
-    errorDiv.style.display = 'none';
-    if(googleBtn) googleBtn.disabled = true;
-
-    // Use Redirect to bypass mobile browser popup blockers completely
-    auth.signInWithRedirect(googleProvider);
-}
 
 function logOut() {
     auth.signOut().then(() => {
