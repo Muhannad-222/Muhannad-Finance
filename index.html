@@ -630,13 +630,8 @@
 
 <script>
 /**
- * TITANIUM ENGINE v10.1 (MOBILE OPTIMIZED)
+ * TITANIUM ENGINE v10.1 (MOBILE OPTIMIZED + LIVE GOLD API)
  */
-
-const CONFIG = {
-    GOLD_API_KEY: 'goldapi-demo-key', 
-    GOLD_API_URL: 'https://www.goldapi.io/api/XAU'
-};
 
 const Store = {
     data: {
@@ -684,7 +679,7 @@ const Store = {
         this.save();
         Router.reload();
         localStorage.removeItem('titan_rates');
-        localStorage.removeItem('titan_gold_rate');
+        localStorage.removeItem(`titan_gold_${code.toLowerCase()}`);
     },
 
     setTheme(name) {
@@ -1025,7 +1020,7 @@ const Helpers = {
     },
 
     async fetchGoldPrice() {
-        const curr = this.getCurrency();
+        const curr = this.getCurrency().toLowerCase();
         const cacheKey = `titan_gold_${curr}`;
         
         const cached = localStorage.getItem(cacheKey);
@@ -1037,34 +1032,25 @@ const Helpers = {
         }
 
         try {
-            const response = await fetch(`${CONFIG.GOLD_API_URL}/${curr}`, {
-                method: 'GET',
-                headers: { 'x-access-token': CONFIG.GOLD_API_KEY, 'Content-Type': 'application/json' }
-            });
+            // Free Open API for Daily Currency & XAU Rates (No Key Required)
+            const response = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/xau.json');
             
             if(response.ok) {
                 const json = await response.json();
-                const price = json.price;
+                const priceOz = json.xau[curr]; 
                 
-                localStorage.setItem(cacheKey, JSON.stringify({
-                    timestamp: Date.now(),
-                    price: price
-                }));
-                return price;
-            } else {
-                throw new Error("API Limit");
+                if (priceOz) {
+                    localStorage.setItem(cacheKey, JSON.stringify({
+                        timestamp: Date.now(),
+                        price: priceOz
+                    }));
+                    return priceOz;
+                }
             }
+            throw new Error("API Limit or Error");
         } catch (e) {
-            console.warn("Gold API Failed, switching to Simulation Mode.");
-            
-            let basePriceUSD = 2750;
-            let simPriceUSD = basePriceUSD + ((Math.random() - 0.5) * 40);
-            
-            let conversionRate = 1;
-            if (curr === 'AED') conversionRate = 3.67;
-            if (curr === 'INR') conversionRate = 83.50;
-            
-            return simPriceUSD * conversionRate;
+            console.warn("Live Gold API Failed.");
+            return null;
         }
     }
 };
@@ -1136,11 +1122,18 @@ const UI = {
                 
                 <div class="card" style="border:1px solid #f59e0b; background: rgba(245, 158, 11, 0.05);">
                     <div class="flex-between">
-                        <div class="text-muted text-sm" style="color:#f59e0b">Gold Rate Live</div>
-                        <div style="font-size:10px; color:#f59e0b">24K</div>
+                        <div class="text-muted text-sm" style="color:#f59e0b">Live Gold Rate (per gram)</div>
                     </div>
-                    <div class="text-xl mt-3" id="gold-price-display" style="color:#f59e0b">Loading...</div>
-                    <div class="text-sm mt-1" id="gold-gram-display" style="color:#a1a1aa">per gram</div>
+                    <div style="display:flex; justify-content:space-between; margin-top:12px;">
+                        <div>
+                            <div style="font-size:11px; color:#f59e0b; font-weight:600;">24K (99.9%)</div>
+                            <div class="text-xl mt-1" id="gold-24k-display" style="color:#f59e0b; font-size:20px;">Loading...</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:11px; color:#f59e0b; font-weight:600;">18K (75.0%)</div>
+                            <div class="text-xl mt-1" id="gold-18k-display" style="color:#f59e0b; font-size:20px;">Loading...</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card">
@@ -1191,19 +1184,21 @@ const UI = {
     },
 
     async refreshGoldRate() {
-        const elPrice = document.getElementById('gold-price-display');
-        const elGram = document.getElementById('gold-gram-display');
-        if(!elPrice) return;
+        const el24k = document.getElementById('gold-24k-display');
+        const el18k = document.getElementById('gold-18k-display');
+        if(!el24k || !el18k) return;
 
         const priceOz = await Helpers.fetchGoldPrice();
         
         if (priceOz) {
-            const priceGram = priceOz / 31.1035; 
-            elPrice.innerText = Helpers.fmtMoney(priceOz);
-            elGram.innerText = `${Helpers.fmtMoney(priceGram)} / gram`;
+            const priceGram24k = priceOz / 31.1035; 
+            const priceGram18k = priceGram24k * 0.75; // 18K is 75% of 24K
+            
+            el24k.innerText = Helpers.fmtMoney(priceGram24k);
+            el18k.innerText = Helpers.fmtMoney(priceGram18k);
         } else {
-            elPrice.innerText = "Unavailable";
-            elGram.innerText = "Check API Key";
+            el24k.innerText = "Unavailable";
+            el18k.innerText = "Unavailable";
         }
     },
 
