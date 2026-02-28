@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Titanium Finance OS v10.1 (Auto-Fix Gold)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Titanium Finance OS v10.1 (Auto-Fix Gold) - Mobile Ready</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* --- DESIGN SYSTEM --- */
@@ -53,7 +53,7 @@
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
         
         /* --- LAYOUT --- */
-        aside { width: 260px; border-right: 1px solid var(--border); background: var(--bg-body); display: flex; flex-direction: column; padding: 16px; z-index: 10; }
+        aside { width: 260px; border-right: 1px solid var(--border); background: var(--bg-body); display: flex; flex-direction: column; padding: 16px; z-index: 50; }
         main { flex: 1; overflow-y: auto; padding: 32px; position: relative; }
         
         /* --- TYPOGRAPHY --- */
@@ -103,7 +103,7 @@
         
         .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .data-table th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); color: var(--text-muted); font-weight: 500; }
-        .data-table td { padding: 12px; border-bottom: 1px solid var(--bg-subtle); color: var(--text-main); }
+        .data-table td { padding: 12px; border-bottom: 1px solid var(--bg-subtle); color: var(--text-main); white-space: nowrap; }
         .data-table tr:last-child td { border-bottom: none; }
         .data-table tr:hover td { background: var(--bg-subtle); }
 
@@ -112,9 +112,9 @@
         
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-            z-index: 100; display: none; align-items: center; justify-content: center;
+            z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px;
         }
-        .modal { background: var(--bg-card); border: 1px solid var(--border); width: 500px; border-radius: 12px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .modal { background: var(--bg-card); border: 1px solid var(--border); width: 100%; max-width: 500px; border-radius: 12px; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
         .form-row { margin-bottom: 16px; }
         .form-row label { display: block; margin-bottom: 6px; color: var(--text-muted); font-size: 12px; }
 
@@ -126,7 +126,7 @@
         .account-item.active { background: var(--bg-subtle); border-color: var(--border); }
 
         /* Theme Selector Bubbles */
-        .theme-selector { display: flex; gap: 10px; margin-top: 10px; }
+        .theme-selector { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
         .theme-bubble { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .theme-bubble:hover { transform: scale(1.1); }
         .theme-bubble.selected { border-color: white; transform: scale(1.1); box-shadow: 0 0 10px rgba(255,255,255,0.2); }
@@ -189,6 +189,7 @@
         /* --- FLOW / SANKEY STYLES --- */
         .flow-container {
             display: flex; justify-content: space-between; position: relative; padding: 20px 0;
+            min-width: 600px; /* Forces scroll on mobile */
         }
         .flow-column {
             display: flex; flex-direction: column; gap: 16px; width: 180px; z-index: 2;
@@ -206,11 +207,73 @@
         
         /* Chart container tweaks */
         canvas { width: 100% !important; height: 100% !important; }
+
+        /* =========================================
+           --- MOBILE RESPONSIVE TWEAKS --- 
+           ========================================= */
+        .mobile-header {
+            display: none;
+            padding: 16px 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            justify-content: space-between;
+            z-index: 40;
+        }
+        .mobile-menu-btn {
+            background: none; border: none; color: var(--text-main); font-size: 24px; cursor: pointer; padding: 0;
+        }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 45;
+        }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .mobile-header { display: flex; }
+            
+            /* Sidebar turns into a slide-over drawer */
+            aside {
+                position: fixed; top: 0; bottom: 0; left: -300px; height: 100vh;
+                width: 280px; transition: left 0.3s var(--ease);
+                box-shadow: 5px 0 25px rgba(0,0,0,0.7);
+            }
+            aside.open { left: 0; }
+            .sidebar-overlay.open { display: block; }
+            
+            main { padding: 16px; overflow-x: hidden; }
+            
+            /* Stack Grids */
+            .grid-dashboard, .grid-3, .grid-2 { grid-template-columns: 1fr; gap: 16px; }
+            
+            /* Header spacing */
+            .main-header-flex { flex-direction: column; align-items: flex-start !important; gap: 16px; }
+            .main-header-flex > div:last-child { width: 100%; display: flex; gap: 10px; }
+            .main-header-flex > div:last-child > button { flex: 1; }
+            
+            /* Scrollable Containers for wide elements */
+            .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+            .flow-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+            
+            /* Modal Form Columns */
+            .form-row .grid-2, .form-row div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <aside>
+    <div class="mobile-header">
+        <div class="brand" style="margin: 0;">
+            <div class="brand-logo"></div>
+            <div style="font-weight:700; letter-spacing:-0.5px; font-size: 18px;">TITANIUM v10.1</div>
+        </div>
+        <button class="mobile-menu-btn" onclick="UI.toggleSidebar()">☰</button>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="UI.toggleSidebar()"></div>
+
+    <aside id="main-sidebar">
         <div class="brand">
             <div class="brand-logo"></div>
             <div style="font-weight:700; letter-spacing:-0.5px;">TITANIUM v10.1</div>
@@ -259,7 +322,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>New Transaction</h3>
-                <button onclick="UI.closeModal()" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="UI.closeModal()" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="tx-form">
                 <div class="form-row">
@@ -335,7 +398,7 @@
         <div class="modal" style="border-top: 4px solid var(--accent);">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>💸 Send Payment</h3>
-                <button onclick="document.getElementById('p2p-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('p2p-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="p2p-form">
                  <div class="form-row">
@@ -381,7 +444,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>Add Loan / Debt</h3>
-                <button onclick="document.getElementById('loan-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('loan-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="loan-form">
                 <div class="form-row">
@@ -416,7 +479,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>Add Asset</h3>
-                <button onclick="document.getElementById('invest-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('invest-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="invest-form">
                 <div class="form-row">
@@ -465,7 +528,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>Add Subscription</h3>
-                <button onclick="document.getElementById('sub-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('sub-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="sub-form">
                 <div class="form-row">
@@ -497,7 +560,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>Add Bank Account</h3>
-                <button onclick="document.getElementById('acc-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('acc-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="acc-form">
                 <div class="form-row">
@@ -534,7 +597,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>New Savings Goal</h3>
-                <button onclick="document.getElementById('goal-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('goal-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <form id="goal-form">
                 <div class="form-row">
@@ -558,7 +621,7 @@
         <div class="modal">
             <div class="flex-between" style="margin-bottom:20px;">
                 <h3>Edit Budgets</h3>
-                <button onclick="document.getElementById('budget-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); cursor:pointer;">✕</button>
+                <button onclick="document.getElementById('budget-modal').style.display='none'" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
             </div>
             <div id="budget-edit-list"></div>
             <button onclick="UI.saveBudgets()" class="btn btn-primary" style="width:100%; justify-content:center; margin-top:16px;">Save Changes</button>
@@ -567,12 +630,10 @@
 
 <script>
 /**
- * TITANIUM ENGINE v10.1
+ * TITANIUM ENGINE v10.1 (MOBILE OPTIMIZED)
  */
 
 const CONFIG = {
-    // We use a demo key. If it fails (due to limits), the system 
-    // will fallback to Simulation Mode automatically.
     GOLD_API_KEY: 'goldapi-demo-key', 
     GOLD_API_URL: 'https://www.goldapi.io/api/XAU'
 };
@@ -638,7 +699,6 @@ const Store = {
         if(name && name !== 'blue') document.body.classList.add(`theme-${name}`);
     },
 
-    // --- Account Methods ---
     addAccount(acc) {
         this.data.accounts.push(acc);
         this.save();
@@ -676,7 +736,6 @@ const Store = {
         return this.getLiquidCash() + this.getInvestedValue();
     },
 
-    // --- Investment Methods ---
     addInvestment(inv) {
         if(!this.data.investments) this.data.investments = [];
         this.data.investments.push(inv);
@@ -698,7 +757,6 @@ const Store = {
         Router.reload();
     },
 
-    // --- Transaction Methods ---
     addTransaction(tx) {
         this.data.transactions.unshift(tx);
         this.save();
@@ -726,7 +784,6 @@ const Store = {
         this.save();
     },
 
-    // --- Budget Logic ---
     checkBudget(category, newAmount) {
         if (!this.data.budgets || !this.data.budgets[category]) return;
         
@@ -744,7 +801,6 @@ const Store = {
         }
     },
 
-    // --- Debt/Loan Methods ---
     addDebt(debt) {
         if(!this.data.debts) this.data.debts = [];
         debt.paid = 0; 
@@ -800,7 +856,6 @@ const Store = {
         Router.reload();
     },
 
-    // --- Goals & Budgets ---
     addGoal(goal) {
         if(!this.data.goals) this.data.goals = [];
         this.data.goals.push(goal);
@@ -973,7 +1028,6 @@ const Helpers = {
         const curr = this.getCurrency();
         const cacheKey = `titan_gold_${curr}`;
         
-        // 1. Try Cache First
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
             const data = JSON.parse(cached);
@@ -983,7 +1037,6 @@ const Helpers = {
         }
 
         try {
-            // 2. Try Real API
             const response = await fetch(`${CONFIG.GOLD_API_URL}/${curr}`, {
                 method: 'GET',
                 headers: { 'x-access-token': CONFIG.GOLD_API_KEY, 'Content-Type': 'application/json' }
@@ -1004,14 +1057,9 @@ const Helpers = {
         } catch (e) {
             console.warn("Gold API Failed, switching to Simulation Mode.");
             
-            // 3. Fallback: Simulation Mode (Realistic Mock Data)
-            // Base price approx $2750 USD/oz
             let basePriceUSD = 2750;
-            
-            // Random fluctuation +/- $20
             let simPriceUSD = basePriceUSD + ((Math.random() - 0.5) * 40);
             
-            // Convert to selected currency (approximate rates)
             let conversionRate = 1;
             if (curr === 'AED') conversionRate = 3.67;
             if (curr === 'INR') conversionRate = 83.50;
@@ -1027,6 +1075,11 @@ const UI = {
 
     togglePrivacy() {
         document.body.classList.toggle('privacy-mode');
+    },
+    
+    toggleSidebar() {
+        document.getElementById('main-sidebar').classList.toggle('open');
+        document.getElementById('sidebar-overlay').classList.toggle('open');
     },
 
     render() {
@@ -1061,7 +1114,7 @@ const UI = {
         }).join('') : '<div class="text-muted text-sm">No accounts yet.</div>';
 
         root.innerHTML = `
-            <div class="flex-between" style="margin-bottom:32px;">
+            <div class="flex-between main-header-flex" style="margin-bottom:32px;">
                 <div>
                     <h1>Dashboard</h1>
                     <div class="text-muted">Financial Overview • ${new Date().toLocaleDateString()}</div>
@@ -1298,7 +1351,6 @@ const UI = {
 
     renderAnalytics(root) {
         const stats = Store.getStats();
-        // Calculate Breakdown for Flow
         const spendingByCategory = {};
         Store.data.transactions.forEach(t => {
             if (t.type === 'expense' && t.category !== 'Transfer') {
@@ -1310,7 +1362,7 @@ const UI = {
         const savings = Math.max(0, totalIncome - totalExpense);
 
         root.innerHTML = `
-            <div class="flex-between" style="margin-bottom:24px;">
+            <div class="flex-between main-header-flex" style="margin-bottom:24px;">
                 <div>
                     <h1>Analytics & Forecast</h1>
                     <div class="text-muted">Deep dive into your financial future.</div>
@@ -1323,30 +1375,33 @@ const UI = {
                         <h3>Money Flow Engine</h3>
                         <div class="text-sm text-muted">Where your money goes</div>
                     </div>
-                    <div class="flow-container" id="flow-box">
-                        <canvas id="flowCanvas" class="flow-canvas"></canvas>
-                        
-                        <div class="flow-column" style="justify-content:center;">
-                            <div class="flow-node" id="node-income" style="border-left:4px solid var(--success)">
-                                <div class="flow-node-title">Total Income</div>
-                                <div class="flow-node-amount">${Helpers.fmtMoney(totalIncome)}</div>
-                            </div>
-                        </div>
-
-                        <div class="flow-column">
-                            ${Object.entries(spendingByCategory).map(([cat, amt]) => `
-                                <div class="flow-node node-expense" data-amt="${amt}" style="border-left:4px solid var(--danger)">
-                                    <div class="flow-node-title">${cat}</div>
-                                    <div class="flow-node-amount">${Helpers.fmtMoney(amt)}</div>
-                                </div>
-                            `).join('')}
+                    
+                    <div class="flow-responsive">
+                        <div class="flow-container" id="flow-box">
+                            <canvas id="flowCanvas" class="flow-canvas"></canvas>
                             
-                            ${savings > 0 ? `
-                                <div class="flow-node node-save" data-amt="${savings}" style="border-left:4px solid var(--success)">
-                                    <div class="flow-node-title">Savings / Invest</div>
-                                    <div class="flow-node-amount">${Helpers.fmtMoney(savings)}</div>
+                            <div class="flow-column" style="justify-content:center;">
+                                <div class="flow-node" id="node-income" style="border-left:4px solid var(--success)">
+                                    <div class="flow-node-title">Total Income</div>
+                                    <div class="flow-node-amount">${Helpers.fmtMoney(totalIncome)}</div>
                                 </div>
-                            ` : ''}
+                            </div>
+
+                            <div class="flow-column">
+                                ${Object.entries(spendingByCategory).map(([cat, amt]) => `
+                                    <div class="flow-node node-expense" data-amt="${amt}" style="border-left:4px solid var(--danger)">
+                                        <div class="flow-node-title">${cat}</div>
+                                        <div class="flow-node-amount">${Helpers.fmtMoney(amt)}</div>
+                                    </div>
+                                `).join('')}
+                                
+                                ${savings > 0 ? `
+                                    <div class="flow-node node-save" data-amt="${savings}" style="border-left:4px solid var(--success)">
+                                        <div class="flow-node-title">Savings / Invest</div>
+                                        <div class="flow-node-amount">${Helpers.fmtMoney(savings)}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1444,6 +1499,20 @@ const UI = {
         }
     },
 
+    drawCurve(ctx, startX, startY, targetEl, containerRect, color) {
+        const targetRect = targetEl.getBoundingClientRect();
+        const endX = targetRect.left - containerRect.left;
+        const endY = (targetRect.top + targetRect.height/2) - containerRect.top;
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.bezierCurveTo(startX + 100, startY, endX - 100, endY, endX, endY);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+    },
+
     renderInvestments(root) {
         const invs = Store.data.investments || [];
         const totalValue = invs.reduce((sum, i) => sum + (i.qty * i.currentPrice), 0);
@@ -1452,13 +1521,13 @@ const UI = {
         const roi = totalCost > 0 ? ((totalPL / totalCost) * 100).toFixed(2) : 0;
         
         root.innerHTML = `
-            <div class="flex-between" style="margin-bottom:32px;">
+            <div class="flex-between main-header-flex" style="margin-bottom:32px;">
                 <div>
                     <h1>Portfolio Tracker</h1>
                     <div class="text-muted">Net Worth: ${Helpers.fmtMoney(totalValue)}</div>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn" onclick="Store.simulateMarket()">🎲 Simulate Market</button>
+                    <button class="btn" onclick="Store.simulateMarket()">🎲 Simulate</button>
                     <button class="btn btn-primary" onclick="document.getElementById('invest-modal').style.display='flex'">+ Add Asset</button>
                 </div>
             </div>
@@ -1563,43 +1632,45 @@ const UI = {
 
     renderTransactions(root) {
         root.innerHTML = `
-            <div class="flex-between" style="margin-bottom:20px;">
+            <div class="flex-between main-header-flex" style="margin-bottom:20px;">
                 <h1>Transactions</h1>
-                <input type="text" placeholder="Search entries..." style="width:250px;" onkeyup="UI.filterTable(this.value)">
+                <input type="text" placeholder="Search entries..." style="width:250px; max-width:100%;" onkeyup="UI.filterTable(this.value)">
             </div>
             <div class="card" style="padding:0;">
-                <table class="data-table" id="full-tx-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Account</th>
-                            <th>Category</th>
-                            <th style="text-align:right;">Amount</th>
-                            <th style="text-align:right;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${Store.data.transactions.length ? Store.data.transactions.map(t => {
-                            const accName = Store.data.accounts.find(a => a.id == t.accountId)?.name || 'Unknown';
-                            const isTransfer = t.category === 'Transfer';
-                            const badgeColor = isTransfer ? 'var(--accent)' : 'var(--text-muted)';
-                            return `
+                <div class="table-responsive">
+                    <table class="data-table" id="full-tx-table">
+                        <thead>
                             <tr>
-                                <td class="text-mono text-muted">${Helpers.fmtDate(t.date)}</td>
-                                <td>${t.desc}</td>
-                                <td><span class="badge" style="background:var(--bg-subtle); color:var(--text-muted);">${accName}</span></td>
-                                <td><span class="badge" style="background:var(--bg-subtle); color:${badgeColor};">${t.category}</span></td>
-                                <td style="text-align:right; font-family:var(--font-mono); font-weight:600; color:${t.amount > 0 ? 'var(--success)' : (isTransfer ? 'var(--text-main)' : 'var(--text-main)')}">
-                                    ${t.amount > 0 ? '+' : ''}${Helpers.fmtMoney(t.amount)}
-                                </td>
-                                <td style="text-align:right;">
-                                    <button class="btn" style="padding:4px 8px; font-size:10px;" onclick="Store.deleteTransaction(${t.id}); Router.reload();">DEL</button>
-                                </td>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Account</th>
+                                <th>Category</th>
+                                <th style="text-align:right;">Amount</th>
+                                <th style="text-align:right;">Action</th>
                             </tr>
-                        `}).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px;" class="text-muted">No transactions found.</td></tr>'}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            ${Store.data.transactions.length ? Store.data.transactions.map(t => {
+                                const accName = Store.data.accounts.find(a => a.id == t.accountId)?.name || 'Unknown';
+                                const isTransfer = t.category === 'Transfer';
+                                const badgeColor = isTransfer ? 'var(--accent)' : 'var(--text-muted)';
+                                return `
+                                <tr>
+                                    <td class="text-mono text-muted">${Helpers.fmtDate(t.date)}</td>
+                                    <td>${t.desc}</td>
+                                    <td><span class="badge" style="background:var(--bg-subtle); color:var(--text-muted);">${accName}</span></td>
+                                    <td><span class="badge" style="background:var(--bg-subtle); color:${badgeColor};">${t.category}</span></td>
+                                    <td style="text-align:right; font-family:var(--font-mono); font-weight:600; color:${t.amount > 0 ? 'var(--success)' : (isTransfer ? 'var(--text-main)' : 'var(--text-main)')}">
+                                        ${t.amount > 0 ? '+' : ''}${Helpers.fmtMoney(t.amount)}
+                                    </td>
+                                    <td style="text-align:right;">
+                                        <button class="btn" style="padding:4px 8px; font-size:10px;" onclick="Store.deleteTransaction(${t.id}); Router.reload();">DEL</button>
+                                    </td>
+                                </tr>
+                            `}).join('') : '<tr><td colspan="6" style="text-align:center; padding:20px;" class="text-muted">No transactions found.</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
     },
@@ -1665,7 +1736,7 @@ const UI = {
         };
 
         root.innerHTML = `
-            <div class="flex-between" style="margin-bottom:24px;">
+            <div class="flex-between main-header-flex" style="margin-bottom:24px;">
                 <div>
                     <h1>Debt Manager</h1>
                     <div class="text-muted">Net Position: <span style="color:${netPos >= 0 ? 'var(--success)' : 'var(--danger)'}">${Helpers.fmtMoney(netPos)}</span></div>
@@ -1704,7 +1775,7 @@ const UI = {
 
     renderAccounts(root) {
         root.innerHTML = `
-            <div class="flex-between" style="margin-bottom:32px;">
+            <div class="flex-between main-header-flex" style="margin-bottom:32px;">
                 <div>
                     <h1>Bank Accounts</h1>
                     <div class="text-muted">Manage your balances and sources.</div>
@@ -1731,7 +1802,6 @@ const UI = {
     },
 
     renderBudget(root) {
-        // Budgets Logic
         const spending = {};
         Store.data.transactions.forEach(t => {
             if(t.amount < 0 && t.category !== 'Transfer') {
@@ -1758,7 +1828,6 @@ const UI = {
             `;
         }
 
-        // Goals Logic
         const goals = Store.data.goals || [];
         let goalsHTML = goals.map(g => {
             const pct = Math.min((g.saved / g.target) * 100, 100);
@@ -1847,7 +1916,7 @@ const UI = {
         }).join('');
 
         root.innerHTML = `
-            <div class="flex-between">
+            <div class="flex-between main-header-flex">
                 <h1>Subscriptions</h1>
                 <div class="text-xl">${Helpers.fmtMoney(totalMonthly)}<span class="text-sm text-muted">/mo</span></div>
             </div>
@@ -1924,7 +1993,6 @@ const UI = {
         document.getElementById('tx-cat').value = "Food"; 
     },
 
-    // --- Helpers ---
     openModal() {
         if(Store.data.accounts.length === 0) {
             alert("Please add a bank account first!");
@@ -1939,7 +2007,6 @@ const UI = {
         UI.setTxType('expense');
         document.getElementById('tx-modal').style.display = 'flex';
         
-        // Fix date to local today
         const local = new Date();
         const offset = local.getTimezoneOffset();
         const today = new Date(local.getTime() - (offset*60*1000)).toISOString().split('T')[0];
@@ -1957,7 +2024,6 @@ const UI = {
         const options = Store.data.accounts.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
         document.getElementById('p2p-account').innerHTML = options;
         
-        // Fix date to local today
         const local = new Date();
         const offset = local.getTimezoneOffset();
         const today = new Date(local.getTime() - (offset*60*1000)).toISOString().split('T')[0];
@@ -2041,6 +2107,13 @@ const Router = {
         const icons = {'dashboard': 0, 'transactions': 1, 'analytics': 2, 'investments': 3, 'loans': 4, 'budget': 5, 'recurring': 6, 'accounts': 7, 'tools': 8};
         if(document.querySelectorAll('.nav-item')[icons[view]])
             document.querySelectorAll('.nav-item')[icons[view]].classList.add('active');
+        
+        // Auto-close sidebar on mobile
+        if(window.innerWidth <= 900) {
+            document.getElementById('main-sidebar').classList.remove('open');
+            document.getElementById('sidebar-overlay').classList.remove('open');
+        }
+        
         UI.render();
     },
     reload() {
@@ -2071,7 +2144,6 @@ document.getElementById('tx-form').addEventListener('submit', (e) => {
         
         if(type === 'expense') {
             amt = -Math.abs(amt); 
-            // ALERT LOGIC
             Store.checkBudget(cat, Math.abs(amt));
         } else {
             amt = Math.abs(amt); 
@@ -2093,7 +2165,6 @@ document.getElementById('tx-form').addEventListener('submit', (e) => {
     Router.reload();
 });
 
-// P2P HANDLER
 document.getElementById('p2p-form').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('p2p-name').value;
@@ -2105,7 +2176,6 @@ document.getElementById('p2p-form').addEventListener('submit', (e) => {
     if(!name) { alert("Please enter receiver's name"); return; }
     if(isNaN(amt) || amt <= 0) { alert("Invalid amount"); return; }
 
-    // ALERT LOGIC
     Store.checkBudget(cat, amt);
 
     const tx = {
