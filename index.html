@@ -696,14 +696,23 @@ const db = firebase.firestore();
 const googleProvider = new firebase.auth.GoogleAuthProvider();
 
 function signInWithGoogle() {
-    document.getElementById('auth-loading').style.display = 'block';
-    document.getElementById('auth-error').style.display = 'none';
-    auth.signInWithPopup(googleProvider).catch(error => {
-        document.getElementById('auth-loading').style.display = 'none';
-        document.getElementById('auth-error').innerText = error.message;
-        document.getElementById('auth-error').style.display = 'block';
-    });
-}
+    const loading = document.getElementById('auth-loading');
+    const errorDiv = document.getElementById('auth-error');
+    
+    loading.style.display = 'block';
+    errorDiv.style.display = 'none';
+
+    // Disable the button to prevent double-clicks
+    const googleBtn = document.querySelector('button[onclick="signInWithGoogle()"]');
+    if(googleBtn) googleBtn.disabled = true;
+
+    // Use Redirect instead of Popup for better mobile and ad-blocker compatibility
+    // Check for errors after returning from the Google redirect
+auth.getRedirectResult().catch(error => {
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('auth-error').innerText = error.message;
+    document.getElementById('auth-error').style.display = 'block';
+});
 
 function logOut() {
     auth.signOut().then(() => {
