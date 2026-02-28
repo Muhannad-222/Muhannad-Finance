@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Titanium Finance OS v10.1 (Auto-Fix Gold) - Mobile Ready</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* --- DESIGN SYSTEM --- */
@@ -263,6 +268,14 @@
 </head>
 <body>
 
+    <div id="auth-screen" style="position:fixed; inset:0; background:var(--bg-body); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px;">
+        <div class="brand-logo" style="width:64px; height:64px; margin-bottom:16px;"></div>
+        <h1 style="font-size:32px; margin-bottom:8px;">Titanium OS</h1>
+        <p class="text-muted" style="margin-bottom:32px;">Secure cloud storage & live financial tracking.</p>
+        <button class="btn btn-primary" onclick="signInWithGoogle()" style="font-size:16px; padding:12px 24px;">Sign in with Google</button>
+        <div id="auth-loading" class="text-muted mt-4" style="display:none; margin-top:16px;">Connecting to database...</div>
+    </div>
+
     <div class="mobile-header">
         <div class="brand" style="margin: 0;">
             <div class="brand-logo"></div>
@@ -300,6 +313,7 @@
         <div class="nav-item" onclick="Router.go('tools')"><span>⚙</span> Settings</div>
         
         <div class="nav-item" onclick="UI.togglePrivacy()" style="margin-top:20px; color:var(--text-main);"><span>👁</span> Privacy Mode</div>
+        <div class="nav-item" onclick="logOut()" style="margin-top:8px; color:var(--danger);"><span>🚪</span> Sign Out</div>
 
         <div style="margin-top: auto;">
              <div style="margin-top:16px;">
@@ -630,10 +644,49 @@
 
 <script>
 /**
- * TITANIUM ENGINE v10.1 (MOBILE OPTIMIZED + LIVE GOLD API - 24K ONLY)
+ * =========================================================================
+ * FIREBASE CONFIGURATION
+ * IMPORTANT: Replace the values below with your Firebase Project keys!
+ * =========================================================================
  */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBeFzWLT6Ny_7mkiSGHflLQKMfihtXovck",
+  authDomain: "personal-finance-tracker-36541.firebaseapp.com",
+  projectId: "personal-finance-tracker-36541",
+  storageBucket: "personal-finance-tracker-36541.firebasestorage.app",
+  messagingSenderId: "215870077537",
+  appId: "1:215870077537:web:b303e187e5977df7880820",
+  measurementId: "G-Q83T62BWTY"
+};
 
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+function signInWithGoogle() {
+    document.getElementById('auth-loading').style.display = 'block';
+    auth.signInWithPopup(googleProvider).catch(error => {
+        alert(error.message);
+        document.getElementById('auth-loading').style.display = 'none';
+    });
+}
+
+function logOut() {
+    auth.signOut().then(() => {
+        location.reload(); // Quick reset of the UI state
+    });
+}
+
+/**
+ * =========================================================================
+ * TITANIUM ENGINE v10.1 (MOBILE + LIVE GOLD + FIREBASE)
+ * =========================================================================
+ */
 const Store = {
+    userId: null,
     data: {
         settings: { currency: 'AED', theme: 'blue' },
         accounts: [], 
@@ -645,24 +698,21 @@ const Store = {
         goals: []
     },
     
-    init() {
-        const saved = localStorage.getItem('titan_db_v10');
-        if (saved) {
-            try {
-                this.data = JSON.parse(saved);
-                if (!this.data.accounts) this.data.accounts = [];
-                if (!this.data.goals) this.data.goals = [];
-                if (!this.data.debts) this.data.debts = [];
-                if (!this.data.investments) this.data.investments = [];
-                if (!this.data.settings) this.data.settings = { currency: 'AED', theme: 'blue' };
-            } catch (e) {
-                console.error("Data corruption detected", e);
-                this.seed();
-            }
+    init(firebaseData) {
+        if (firebaseData) {
+            this.data = firebaseData;
+            // Fallbacks for older data structures
+            if (!this.data.accounts) this.data.accounts = [];
+            if (!this.data.goals) this.data.goals = [];
+            if (!this.data.debts) this.data.debts = [];
+            if (!this.data.investments) this.data.investments = [];
+            if (!this.data.settings) this.data.settings = { currency: 'AED', theme: 'blue' };
         } else {
             this.seed();
         }
+        
         this.applyTheme(this.data.settings.theme);
+        document.getElementById('currency-selector').value = this.data.settings?.currency || 'AED';
         
         Chart.defaults.color = '#a1a1aa';
         Chart.defaults.borderColor = '#3f3f46';
@@ -670,7 +720,14 @@ const Store = {
     },
 
     save() {
+        // Keep a local copy as backup
         localStorage.setItem('titan_db_v10', JSON.stringify(this.data));
+        
+        // Push to Firebase Cloud
+        if (this.userId) {
+            db.collection('users').doc(this.userId).set(this.data)
+              .catch(err => console.error("Error saving to Firebase:", err));
+        }
     },
 
     setCurrency(code) {
@@ -898,23 +955,18 @@ const Store = {
         this.data = {
             settings: { currency: 'AED', theme: 'blue' },
             accounts: [
-                { id: 1, name: 'ADCB Current', type: 'Checking', initialBalance: 5000 },
-                { id: 2, name: 'Wallet (Cash)', type: 'Cash', initialBalance: 200 }
+                { id: 1, name: 'Main Account', type: 'Checking', initialBalance: 5000 },
+                { id: 2, name: 'Wallet', type: 'Cash', initialBalance: 200 }
             ],
             transactions: [
-                { id: 1, date: '2023-10-24', desc: 'Consulting Project', amount: 4200, type: 'income', category: 'Salary', accountId: 1 },
-                { id: 2, date: '2023-10-25', desc: 'LuLu Hypermarket', amount: -142.50, type: 'expense', category: 'Food', accountId: 1 },
+                { id: 1, date: '2023-10-24', desc: 'Welcome Bonus', amount: 4200, type: 'income', category: 'Salary', accountId: 1 },
+                { id: 2, date: '2023-10-25', desc: 'Groceries', amount: -142.50, type: 'expense', category: 'Food', accountId: 1 },
             ],
-            investments: [
-                { id: 1, type: 'Crypto', name: 'Bitcoin', symbol: 'BTC', qty: 0.05, buyPrice: 40000, currentPrice: 52000 },
-                { id: 2, type: 'Stock', name: 'Apple Inc', symbol: 'AAPL', qty: 10, buyPrice: 150, currentPrice: 175 }
-            ],
-            recurring: [
-                { id: 1, name: 'Internet', amount: 299, day: 15, icon: '📡' },
-            ],
+            investments: [],
+            recurring: [],
             budgets: { 'Housing': 2500, 'Food': 1200, 'Transport': 400, 'Tech': 500, 'Misc': 300 },
-            goals: [ { id: 1, name: 'New Mac', target: 6000, saved: 1500, icon: '💻'} ],
-            debts: [ { id: 1, type: 'owe', person: 'Alice', amount: 150, paid: 0, status: 'active', dueDate: '2023-12-01' } ]
+            goals: [],
+            debts: []
         };
         this.save();
     },
@@ -2263,10 +2315,43 @@ document.getElementById('goal-form').addEventListener('submit', (e) => {
     Router.reload();
 });
 
-// Boot
-Store.init();
-document.getElementById('currency-selector').value = Store.data.settings?.currency || 'AED';
-UI.render();
+
+/**
+ * =========================================================================
+ * BOOT SEQUENCE
+ * =========================================================================
+ */
+
+// Listen for Authentication state changes
+auth.onAuthStateChanged(user => {
+    if (user) {
+        // User is logged in, hide auth screen
+        document.getElementById('auth-screen').style.display = 'none';
+        Store.userId = user.uid;
+        
+        // Fetch their data from Firestore
+        db.collection('users').doc(user.uid).get().then(doc => {
+            if (doc.exists) {
+                // Existing user
+                Store.init(doc.data());
+            } else {
+                // First time user - create seed data
+                Store.init(null);
+            }
+            UI.render();
+        }).catch(err => {
+            console.error("Error loading data from Firebase:", err);
+            // Fallback to local storage if Firebase fails
+            const saved = localStorage.getItem('titan_db_v10');
+            Store.init(saved ? JSON.parse(saved) : null);
+            UI.render();
+        });
+    } else {
+        // No user is logged in, show auth screen
+        document.getElementById('auth-screen').style.display = 'flex';
+        document.getElementById('auth-loading').style.display = 'none';
+    }
+});
 
 </script>
 </body>
